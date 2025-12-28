@@ -23,9 +23,7 @@
 
 ## 总览
 
-Themby 是一个由 Flutter 编写的第三方 Emby 客户端，使用 GoRouter、Riverpod、Dio、Media_Kit、Objectbox 等插件。
-
-目前只支持安卓平台，使用 mpv 播放器，支持搜索、收藏、播放历史等功能。
+Themby 是一个支持多平台的媒体播放器。
 
 > [!TIP]
 > 项目目前还在完善中，欢迎提出建议和反馈。
