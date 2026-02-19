@@ -1,0 +1,77 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    # 根据你的文件结构，所有Flutter代码都在 'Themby' 目录下
+    defaults:
+      run:
+        working-directory: ./Themby
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Java 环境 (Android 构建需要)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 3. 设置 Flutter 环境
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0' # 对应 pubspec 中的 sdk: '>=3.4.0 <4.0.0'
+          channel: 'stable'
+          cache: true
+
+      # 4. 获取依赖
+      - name: Get Dependencies
+        run: flutter pub get
+
+      # 5. 运行代码生成 (Riverpod, ObjectBox, JSON 需要此步骤)
+      - name: Run Build Runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      # 6. 构建 APK (指定 arm64-v8a 架构)
+      # 注意：你的 android/app/build.gradle 中 release 配置使用了 signingConfigs.debug，
+      # 所以这里可以直接打 release 包而不需要配置额外的密钥签名。
+      - name: Build Release APK
+        run: flutter build apk --release --target-platform android-arm64 --split-per-abi --no-tree-shake-icons
+
+      # 7. 获取版本号并重命名 APK
+      - name: Rename APK
+        id: rename_apk
+        run: |
+          # 从 pubspec.yaml 提取版本号 (例如 1.0.5)
+          VERSION=$(grep 'version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "Detected Version: $VERSION"
+          
+          # 定义原始路径和目标名称
+          ORIGINAL_APK="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+          NEW_NAME="Themby-arm64-v8a-v${VERSION}.apk"
+          
+          # 重命名
+          mv $ORIGINAL_APK $NEW_NAME
+          
+          # 将文件名保存到环境变量，供后续步骤使用
+          echo "APK_PATH=Themby/$NEW_NAME" >> $GITHUB_ENV
+          echo "APK_NAME=$NEW_NAME" >> $GITHUB_ENV
+
+      # 8. 上传构建产物 (你可以在 Actions 页面下载)
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_PATH }}
+          retention-days: 7
