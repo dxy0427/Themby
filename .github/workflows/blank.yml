@@ -10,10 +10,9 @@ jobs:
     name: Build APK
     runs-on: ubuntu-latest
 
-    # 根据你的文件结构，所有Flutter代码都在 'Themby' 目录下
     defaults:
       run:
-        working-directory: ./Themby
+        working-directory: ./
 
     steps:
       # 1. 检出代码
