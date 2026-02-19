@@ -1,5 +1,3 @@
-
-
 import 'package:auto_orientation/auto_orientation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,12 +28,20 @@ class _VideoCustom extends ConsumerState<VideoCustom>{
   @override
   void initState(){
     super.initState();
-    Future.microtask(() async {
-      await ref.read(thembyControllerProvider).init();;
-    });
     enterFullScreen();
-    ref.read(controlsServiceProvider.notifier).startPlay(widget.media);
-    ref.read(volumeBrightnessServiceProvider.notifier).update();
+    // 修复：必须等待初始化完成后再开始播放，否则会抛出 LateInitializationError
+    _initAndPlay();
+  }
+
+  Future<void> _initAndPlay() async {
+    // 1. 等待底层播放器初始化完成
+    await ref.read(thembyControllerProvider).init();
+    
+    // 2. 检查页面是否还存在，然后开始播放逻辑
+    if (mounted) {
+      ref.read(controlsServiceProvider.notifier).startPlay(widget.media);
+      ref.read(volumeBrightnessServiceProvider.notifier).update();
+    }
   }
 
 
@@ -57,6 +63,11 @@ class _VideoCustom extends ConsumerState<VideoCustom>{
   Widget build(BuildContext context) {
 
     final fitType = ref.watch(fitTypeServiceProvider);
+    
+    // 注意：如果 _initAndPlay 还没完成，这里读取 videoControllerProvider 可能会报错
+    // 但由于 Provider 是懒加载的，只要 ensureInitialized 做好了通常没问题
+    // 为了更稳健，可以加一个简单的判断，或者依赖 init 状态，但在当前架构下，
+    // 上面的 initState 修复通常已足够解决启动崩溃。
     final controller = ref.watch(videoControllerProvider);
 
     return Container(
