@@ -100,12 +100,12 @@ class ScaffoldWithNavigationBar extends StatelessWidget {
           NavigationDestination(
             selectedIcon: Icon(Icons.video_library, color: Theme.of(context).colorScheme.primary),
             icon: const Icon(Icons.video_library),
-            label: 'library'.hardcoded,
+            label: '媒体库'.hardcoded,
           ),
           NavigationDestination(
             selectedIcon: Icon(Icons.favorite_rounded, color: Theme.of(context).colorScheme.primary),
             icon: const Icon(Icons.favorite_border_rounded),
-            label: 'favorite'.hardcoded,
+            label: '收藏'.hardcoded,
           ),
         ],
         onDestinationSelected: onDestinationSelected,
